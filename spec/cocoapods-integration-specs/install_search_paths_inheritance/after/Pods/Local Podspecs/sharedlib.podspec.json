@@ -23,21 +23,15 @@
       "name": "Core",
       "source_files": "Classes/Core/*.{h,m}",
       "dependencies": {
-        "asserts": [
-
-        ],
-        "logger": [
-
-        ]
+        "asserts": [],
+        "logger": []
       }
     },
     {
       "name": "Testing",
       "source_files": "Classes/Testing/*.{h,m}",
       "dependencies": {
-        "testkit": [
-
-        ]
+        "testkit": []
       }
     }
   ]

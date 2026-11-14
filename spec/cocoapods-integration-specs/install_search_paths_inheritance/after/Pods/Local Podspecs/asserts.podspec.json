@@ -17,9 +17,7 @@
   ],
   "exclude_files": "Classes/Exclude",
   "dependencies": {
-    "logger": [
-
-    ]
+    "logger": []
   },
   "platforms": {
     "osx": null,

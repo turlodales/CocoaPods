@@ -14,12 +14,8 @@
   "source_files": "src/**/*.{h,m,swift}",
   "public_header_files": "src/**/*.h",
   "dependencies": {
-    "ObjCPod": [
-
-    ],
-    "SwiftPod": [
-
-    ]
+    "ObjCPod": [],
+    "SwiftPod": []
   },
   "platforms": {
     "ios": "9.0",

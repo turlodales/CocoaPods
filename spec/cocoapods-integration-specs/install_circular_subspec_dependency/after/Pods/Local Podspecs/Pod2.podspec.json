@@ -20,9 +20,7 @@
     {
       "name": "s1",
       "dependencies": {
-        "Pod1/s1": [
-
-        ]
+        "Pod1/s1": []
       }
     },
     {
