@@ -14,9 +14,7 @@
   "source_files": "Classes/**/*.{h,m}",
   "frameworks": "XCTest",
   "dependencies": {
-    "asserts": [
-
-    ]
+    "asserts": []
   },
   "platforms": {
     "osx": null,

@@ -16,9 +16,7 @@
   },
   "source_files": "Sources/**/*",
   "dependencies": {
-    "TestLib": [
-
-    ]
+    "TestLib": []
   },
   "swift_versions": "4",
   "testspecs": [
@@ -28,12 +26,8 @@
       "requires_app_host": true,
       "app_host_name": "HostedTestLib/App",
       "dependencies": {
-        "HostedTestLib/App": [
-
-        ],
-        "DepPod": [
-
-        ]
+        "HostedTestLib/App": [],
+        "DepPod": []
       },
       "source_files": "UnitTests3/**/*"
     },
@@ -43,9 +37,7 @@
       "requires_app_host": true,
       "app_host_name": "TestLib/App",
       "dependencies": {
-        "TestLib/App": [
-
-        ]
+        "TestLib/App": []
       },
       "source_files": "UnitTests4/**/*"
     },
@@ -55,9 +47,7 @@
       "requires_app_host": true,
       "app_host_name": "HostedTestLib/AppWithDep",
       "dependencies": {
-        "HostedTestLib/AppWithDep": [
-
-        ]
+        "HostedTestLib/AppWithDep": []
       },
       "source_files": "UnitTests4/**/*"
     },
@@ -67,12 +57,8 @@
       "requires_app_host": true,
       "app_host_name": "HostedTestLib/AppWithDep",
       "dependencies": {
-        "HostedTestLib/AppWithDep": [
-
-        ],
-        "DepPod": [
-
-        ]
+        "HostedTestLib/AppWithDep": [],
+        "DepPod": []
       },
       "source_files": "UnitTests4/**/*"
     }
@@ -89,9 +75,7 @@
       "name": "AppWithDep",
       "source_files": "App/**/*",
       "dependencies": {
-        "DepPod": [
-
-        ]
+        "DepPod": []
       },
       "pod_target_xcconfig": {
         "PRODUCT_NAME": "App Host with Dep"

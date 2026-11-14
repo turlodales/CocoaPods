@@ -226,7 +226,7 @@ begin
       end
 
       puts
-      puts 'Integration fixtures updated, commit and push in the `spec/cocoapods-integration-specs` submodule'
+      puts 'Integration fixtures updated, commit and push the changes'
     end
 
     task :clean_env => [:clean_vcr, 'fixture_tarballs:unpack', 'ext:cleanbuild']

@@ -24,9 +24,7 @@
     {
       "name": "s2",
       "dependencies": {
-        "Pod2/s2": [
-
-        ]
+        "Pod2/s2": []
       },
       "source_files": "*.{h,m}"
     }

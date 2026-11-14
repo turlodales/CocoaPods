@@ -15,9 +15,7 @@
     "DEFINES_MODULE": "YES"
   },
   "dependencies": {
-    "HeaderMappingsDirPod": [
-
-    ]
+    "HeaderMappingsDirPod": []
   },
   "platforms": {
     "osx": null,

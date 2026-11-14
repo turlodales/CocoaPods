@@ -19,9 +19,7 @@
     {
       "name": "s3",
       "dependencies": {
-        "Pod1/s2": [
-
-        ]
+        "Pod1/s2": []
       },
       "source_files": "*.{h,m}"
     }
