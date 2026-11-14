@@ -1,3 +1,5 @@
+require 'bundler'
+
 # Bootstrap task
 #-----------------------------------------------------------------------------#
 
@@ -130,13 +132,17 @@ begin
 
       if specs
         title 'Running the specs'
-        sh "bundle exec bacon #{specs('**/*')}"
+        Bundler.with_unbundled_env do
+          sh "bundle exec bacon #{specs('**/*')}"
+        end
 
         title 'Running Integration tests'
-        sh 'bundle exec bacon spec/integration.rb'
+        Bundler.with_unbundled_env do
+          sh 'bundle exec bacon spec/integration.rb'
+        end
       end
 
-      if examples
+      if examples && ENV['SKIP_EXAMPLES'].nil?
         title 'Running examples'
         Rake::Task['examples:build'].invoke
       end
@@ -147,20 +153,6 @@ begin
 
         title 'Running Inch'
         Rake::Task['inch'].invoke
-
-        unless ENV['CI'].nil?
-          title 'Running Danger'
-          # The obfuscated token is hard-coded into the repo because GitHub's Actions have no option to make a secret
-          # available to PRs from forks. This token belongs to @CocoaPodsBarista and has no permissions except posting
-          # comments. The reason it is needed is to inform the PR author of things Danger has suggestions for.
-          ENV['DANGER_GITHUB_API_TOKEN'] = [:d, 2, :c, :e, 4,
-                                            6, 5, :d, 3, :c, :b, 3, 3,
-                                            :b, 6, 4, 4, 8, 2, 3, 2, :f,
-                                            1, 8, :d, 8, :a, 5, 1, 6,
-                                            5, 4, 4, 2, :c, :e, 3,
-                                            :b, 0, :b].map(&:to_s).join
-          Rake::Task['danger'].invoke
-        end
       end
     end
 
@@ -234,7 +226,7 @@ begin
       end
 
       puts
-      puts 'Integration fixtures updated, commit and push in the `spec/cocoapods-integration-specs` submodule'
+      puts 'Integration fixtures updated, commit and push the changes'
     end
 
     task :clean_env => [:clean_vcr, 'fixture_tarballs:unpack', 'ext:cleanbuild']
@@ -257,20 +249,48 @@ begin
       end
     end
 
-    desc 'Build all examples'
-    task :build do
-      Bundler.require 'xcodeproj', :development
+    desc 'pod install all examples'
+    task :pod_install do
       Dir['examples/*'].sort.each do |dir|
+        next unless File.directory?(dir)
         Dir.chdir(dir) do
           puts "Example: #{dir}"
 
           puts '    Installing Pods'
           # pod_command = ENV['FROM_GEM'] ? 'sandbox-pod' : 'bundle exec ../../bin/sandbox-pod'
           # TODO: The sandbox is blocking local git repos making bundler crash
-          pod_command = ENV['FROM_GEM'] ? 'sandbox-pod' : 'bundle exec ../../bin/pod'
+          pod_command = ENV['FROM_GEM'] ? 'sandbox-pod' : 'bundle exec pod'
 
           execute_command 'rm -rf Pods'
-          execute_command "#{pod_command} install --verbose --no-repo-update"
+          execute_command "#{pod_command} install --verbose"
+        end
+      end
+    end
+
+    desc 'Build all examples'
+    task :build, [:pattern] do |_t, args|
+      Bundler.require 'xcodeproj', :development
+      pattern = if (p = args[:pattern])
+                  /#{p}/
+                else
+                  /.*/
+                end
+      Dir['examples/*'].sort.each do |dir|
+        next unless File.directory?(dir)
+        unless dir.match?(pattern)
+          puts "Skipping #{dir}"
+          next
+        end
+        Dir.chdir(dir) do
+          puts "Example: #{dir}"
+
+          puts '    Installing Pods'
+          # pod_command = ENV['FROM_GEM'] ? 'sandbox-pod' : 'bundle exec ../../bin/sandbox-pod'
+          # TODO: The sandbox is blocking local git repos making bundler crash
+          pod_command = ENV['FROM_GEM'] ? 'sandbox-pod' : 'bundle exec pod'
+
+          execute_command 'rm -rf Pods'
+          execute_command "#{pod_command} install --verbose"
 
           workspace_path = 'Examples.xcworkspace'
           workspace = Xcodeproj::Workspace.new_from_xcworkspace(workspace_path)
@@ -293,10 +313,10 @@ begin
             when :osx
               execute_command(*xcodebuild_args)
             when :ios
-              xcodebuild_args.concat ['ONLY_ACTIVE_ARCH=NO', '-destination', 'platform=iOS Simulator,name=iPhone 11 Pro']
+              xcodebuild_args.concat ['ONLY_ACTIVE_ARCH=NO', 'CODE_SIGNING_ALLOWED=NO', '-destination', 'platform=iOS Simulator,name=iPhone 16 Pro']
               execute_command(*xcodebuild_args)
             when :watchos
-              xcodebuild_args.concat ['ONLY_ACTIVE_ARCH=NO', '-destination', 'platform=watchOS Simulator,name=Apple Watch Series 5 - 40mm']
+              xcodebuild_args.concat ['ONLY_ACTIVE_ARCH=NO', 'CODE_SIGNING_ALLOWED=NO', '-destination', 'platform=watchOS Simulator,name=Apple Watch Series 5 - 40mm']
             else
               raise "Unknown platform #{platform}"
             end

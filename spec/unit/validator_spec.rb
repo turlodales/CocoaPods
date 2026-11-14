@@ -41,6 +41,10 @@ module Pod
       source.specification_path(name, version)
     end
 
+    def stub_downloader_cache_rsync
+      Downloader::Cache.any_instance.expects(:rsync_contents).with { |_, destination| FileUtils.mkdir_p(destination) }
+    end
+
     #-------------------------------------------------------------------------#
 
     describe 'Quick mode' do
@@ -340,10 +344,10 @@ module Pod
           file = write_podspec(stub_podspec)
           validator = Validator.new(file, config.sources_manager.master.map(&:url))
           validator.stubs(:validate_url)
-          validator.expects(:install_pod).times(4)
-          validator.expects(:build_pod).times(4)
-          validator.expects(:add_app_project_import).times(4)
-          validator.expects(:check_file_patterns).times(4)
+          validator.expects(:install_pod).times(5)
+          validator.expects(:build_pod).times(5)
+          validator.expects(:add_app_project_import).times(5)
+          validator.expects(:check_file_patterns).times(5)
           validator.validate
         end
 
@@ -608,6 +612,7 @@ module Pod
         validator.expects(:podfile_from_spec).with(:ios, nil, false, [], nil, nil).once.returns(stub('Podfile'))
         validator.expects(:podfile_from_spec).with(:ios, '7.0', false, [], nil, nil).once.returns(stub('Podfile'))
         validator.expects(:podfile_from_spec).with(:tvos, nil, false, [], nil, nil).once.returns(stub('Podfile'))
+        validator.expects(:podfile_from_spec).with(:visionos, nil, false, [], nil, nil).once.returns(stub('Podfile'))
         validator.expects(:podfile_from_spec).with(:watchos, nil, false, [], nil, nil).once.returns(stub('Podfile'))
         validator.send(:perform_extensive_analysis, validator.spec)
 
@@ -785,6 +790,7 @@ module Pod
         require 'fourflusher'
         Fourflusher::SimControl.any_instance.stubs(:destination).returns(['-destination', 'id=XXX'])
         Validator.any_instance.unstub(:xcodebuild)
+        stub_downloader_cache_rsync
         validator = Validator.new(podspec_path, config.sources_manager.master.map(&:url))
         validator.stubs(:check_file_patterns)
         validator.stubs(:validate_url)
@@ -802,6 +808,7 @@ module Pod
         require 'fourflusher'
         Fourflusher::SimControl.any_instance.stubs(:destination).returns(['-destination', 'id=XXX'])
         Validator.any_instance.unstub(:xcodebuild)
+        stub_downloader_cache_rsync
         PodTarget.any_instance.stubs(:should_build?).returns(true)
         Installer::Xcode::PodsProjectGenerator::PodTargetInstaller.any_instance.stubs(:validate_targets_contain_sources) # since we skip downloading
         validator = Validator.new(podspec_path, config.sources_manager.master.map(&:url))
@@ -821,7 +828,9 @@ module Pod
         Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
         args = %w(CODE_SIGN_IDENTITY=- -sdk iphonesimulator) + Fourflusher::SimControl.new.destination('iPhone 4s')
         Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
-        args = %w(CODE_SIGN_IDENTITY=- -sdk watchsimulator) + Fourflusher::SimControl.new.destination('Apple Watch - 38mm')
+        args = %w(CODE_SIGN_IDENTITY=- -sdk xrsimulator) + Fourflusher::SimControl.new.destination('Apple Vision Pro')
+        Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
+        args = %w(CODE_SIGN_IDENTITY=- -sdk watchsimulator)
         Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
         validator.validate.should == true
       end
@@ -830,6 +839,7 @@ module Pod
         require 'fourflusher'
         Fourflusher::SimControl.any_instance.stubs(:destination).returns(['-destination', 'id=XXX'])
         Validator.any_instance.unstub(:xcodebuild)
+        stub_downloader_cache_rsync
         PodTarget.any_instance.stubs(:should_build?).returns(true)
         Installer::Xcode::PodsProjectGenerator::PodTargetInstaller.any_instance.stubs(:validate_targets_contain_sources) # since we skip downloading
         validator = Validator.new(podspec_path, config.sources_manager.master.map(&:url))
@@ -850,7 +860,9 @@ module Pod
         Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
         args = %w(CODE_SIGN_IDENTITY=- -sdk iphonesimulator) + Fourflusher::SimControl.new.destination('iPhone 4s')
         Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
-        args = %w(CODE_SIGN_IDENTITY=- -sdk watchsimulator) + Fourflusher::SimControl.new.destination('Apple Watch - 38mm')
+        args = %w(CODE_SIGN_IDENTITY=- -sdk xrsimulator) + Fourflusher::SimControl.new.destination('Apple Vision Pro')
+        Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
+        args = %w(CODE_SIGN_IDENTITY=- -sdk watchsimulator)
         Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
         validator.validate.should == true
       end
@@ -859,6 +871,7 @@ module Pod
         require 'fourflusher'
         Fourflusher::SimControl.any_instance.stubs(:destination).returns(['-destination', 'id=XXX'])
         Validator.any_instance.unstub(:xcodebuild)
+        stub_downloader_cache_rsync
         PodTarget.any_instance.stubs(:should_build?).returns(true)
         Installer::Xcode::PodsProjectGenerator::PodTargetInstaller.any_instance.stubs(:validate_targets_contain_sources) # since we skip downloading
         validator = Validator.new(podspec_path, config.sources_manager.master.map(&:url))
@@ -881,7 +894,9 @@ module Pod
         Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
         args = %w(CODE_SIGN_IDENTITY=- -sdk iphonesimulator) + Fourflusher::SimControl.new.destination('iPhone 4s') + analyzer_args
         Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
-        args = %w(CODE_SIGN_IDENTITY=- -sdk watchsimulator) + Fourflusher::SimControl.new.destination('Apple Watch - 38mm') + analyzer_args
+        args = %w(CODE_SIGN_IDENTITY=- -sdk xrsimulator) + Fourflusher::SimControl.new.destination('Apple Vision Pro') + analyzer_args
+        Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
+        args = %w(CODE_SIGN_IDENTITY=- -sdk watchsimulator) + analyzer_args
         Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
         validator.validate.should == true
       end
@@ -890,6 +905,7 @@ module Pod
         require 'fourflusher'
         Fourflusher::SimControl.any_instance.stubs(:destination).returns(['-destination', 'id=XXX'])
         Validator.any_instance.unstub(:xcodebuild)
+        stub_downloader_cache_rsync
         PodTarget.any_instance.stubs(:should_build?).returns(true)
         Installer::Xcode::PodsProjectGenerator::PodTargetInstaller.any_instance.stubs(:validate_targets_contain_sources) # since we skip downloading
         validator = Validator.new(podspec_path, config.sources_manager.master.map(&:url))
@@ -913,7 +929,9 @@ module Pod
         Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
         args = %w(CODE_SIGN_IDENTITY=- -sdk iphonesimulator) + Fourflusher::SimControl.new.destination('iPhone 4s') + analyzer_args
         Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
-        args = %w(CODE_SIGN_IDENTITY=- -sdk watchsimulator) + Fourflusher::SimControl.new.destination('Apple Watch - 38mm') + analyzer_args
+        args = %w(CODE_SIGN_IDENTITY=- -sdk xrsimulator) + Fourflusher::SimControl.new.destination('Apple Vision Pro') + analyzer_args
+        Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
+        args = %w(CODE_SIGN_IDENTITY=- -sdk watchsimulator) + analyzer_args
         Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
         validator.validate.should == true
       end
@@ -922,6 +940,7 @@ module Pod
         require 'fourflusher'
         Fourflusher::SimControl.any_instance.stubs(:destination).returns(['-destination', 'id=XXX'])
         Validator.any_instance.unstub(:xcodebuild)
+        stub_downloader_cache_rsync
         validator = Validator.new(podspec_path, config.sources_manager.master.map(&:url))
         validator.stubs(:check_file_patterns)
         validator.stubs(:validate_url)
@@ -937,7 +956,9 @@ module Pod
         Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
         args = %w(CODE_SIGN_IDENTITY=- -sdk iphonesimulator) + Fourflusher::SimControl.new.destination('iPhone 4s')
         Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
-        args = %w(CODE_SIGN_IDENTITY=- -sdk watchsimulator) + Fourflusher::SimControl.new.destination('Apple Watch - 38mm')
+        args = %w(CODE_SIGN_IDENTITY=- -sdk xrsimulator) + Fourflusher::SimControl.new.destination('Apple Vision Pro')
+        Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
+        args = %w(CODE_SIGN_IDENTITY=- -sdk watchsimulator)
         Executable.expects(:execute_command).with('xcodebuild', command + args, true).once.returns('')
         validator.validate
       end
@@ -1275,6 +1296,7 @@ module Pod
         @validator.expects(:podfile_from_spec).with(:osx, nil, true, [], nil, nil).once.returns(stub('Podfile'))
         @validator.expects(:podfile_from_spec).with(:ios, '8.0', true, [], nil, nil).once.returns(stub('Podfile'))
         @validator.expects(:podfile_from_spec).with(:tvos, nil, true, [], nil, nil).once.returns(stub('Podfile'))
+        @validator.expects(:podfile_from_spec).with(:visionos, nil, true, [], nil, nil).once.returns(stub('Podfile'))
         @validator.expects(:podfile_from_spec).with(:watchos, nil, true, [], nil, nil).once.returns(stub('Podfile'))
         @validator.send(:perform_extensive_analysis, @validator.spec)
 
@@ -1289,6 +1311,7 @@ module Pod
         @validator.expects(:podfile_from_spec).with(:osx, nil, false, [], nil, nil).once.returns(stub('Podfile'))
         @validator.expects(:podfile_from_spec).with(:ios, nil, false, [], nil, nil).once.returns(stub('Podfile'))
         @validator.expects(:podfile_from_spec).with(:tvos, nil, false, [], nil, nil).once.returns(stub('Podfile'))
+        @validator.expects(:podfile_from_spec).with(:visionos, nil, false, [], nil, nil).once.returns(stub('Podfile'))
         @validator.expects(:podfile_from_spec).with(:watchos, nil, false, [], nil, nil).once.returns(stub('Podfile'))
         @validator.send(:perform_extensive_analysis, @validator.spec)
 
@@ -1324,7 +1347,7 @@ module Pod
         validator.validate
 
         validator.results.count.should == 2
-        validator.results.map(&:to_s)[0].should.match /`empty\.dylib` does not match the expected static library name format/
+        validator.results.map(&:to_s)[0].should.match /`empty\.dylib` does not match the expected library name format/
         validator.results.map(&:to_s)[1].should.match /Dynamic frameworks.*iOS 8.0 and onwards/
         validator.result_type.should == :error
       end
@@ -1340,7 +1363,7 @@ module Pod
         validator.validate
 
         validator.results.count.should == 1
-        validator.results.map(&:to_s).first.should.match /`monkey\.a` does not match the expected static library name format/
+        validator.results.map(&:to_s).first.should.match /`monkey\.a` does not match the expected library name format/
         validator.result_type.should == :warning
       end
     end

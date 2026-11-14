@@ -28,6 +28,7 @@ module Pod
         OTHER_CFLAGS
         OTHER_CPLUSPLUSFLAGS
         OTHER_LDFLAGS
+        OTHER_MODULE_VERIFIER_FLAGS
         OTHER_SWIFT_FLAGS
         REZ_SEARCH_PATHS
         SECTORDER_FLAGS
@@ -294,6 +295,11 @@ module Pod
       end
 
       # @return [Array<String>]
+      define_build_settings_method :other_module_verifier_flags, :build_setting => true, :memoized => true do
+        []
+      end
+
+      # @return [Array<String>]
       define_build_settings_method :module_map_files do
         []
       end
@@ -359,7 +365,7 @@ module Pod
                    else
                      "'@loader_path/Frameworks'"
                    end
-          paths << '${DT_TOOLCHAIN_DIR}/usr/lib/swift/${PLATFORM_NAME}' if uses_swift
+          paths << '${TOOLCHAIN_DIR}/usr/lib/swift/${PLATFORM_NAME}' if uses_swift
         else
           paths << "'@executable_path/Frameworks'"
           paths << "'@loader_path/Frameworks'"
@@ -443,7 +449,7 @@ module Pod
       def merged_xcconfigs(xcconfig_values_by_consumer_by_key, attribute, overriding: {})
         xcconfig_values_by_consumer_by_key.each_with_object(overriding.dup) do |(key, values_by_consumer), xcconfig|
           uniq_values = values_by_consumer.values.uniq
-          values_are_bools = uniq_values.all? { |v| v =~ /\A(yes|no)\z/i }
+          values_are_bools = uniq_values.all? { |v| v.is_a?(String) && v =~ /\A(yes|no)\z/i }
           if values_are_bools
             # Boolean build settings
             if uniq_values.count > 1
@@ -866,7 +872,7 @@ module Pod
           search_paths = vendored_static_library_search_paths + vendored_dynamic_library_search_paths
           if target.uses_swift? || other_swift_flags_without_swift?
             search_paths << '/usr/lib/swift'
-            search_paths << '${DT_TOOLCHAIN_DIR}/usr/lib/swift/${PLATFORM_NAME}'
+            search_paths << '${TOOLCHAIN_DIR}/usr/lib/swift/${PLATFORM_NAME}'
             search_paths << '$(PLATFORM_DIR)/Developer/Library/Frameworks' if test_xcconfig?
           end
           return search_paths if target.build_as_framework? || !target.should_build?
@@ -1230,6 +1236,13 @@ module Pod
           flags += silenced_headers.uniq.flat_map { |p| ['-isystem', p] }
           flags += silenced_frameworks.uniq.flat_map { |p| ['-iframework', p] }
 
+          flags
+        end
+
+        # @return [Array<String>]
+        define_build_settings_method :other_module_verifier_flags, :memoized => true do
+          flags = super()
+          flags += pod_targets.map { |pt| '-F' + pt.build_settings[@configuration].configuration_build_dir }
           flags
         end
 

@@ -25,7 +25,7 @@ module Pod
             ['--use-static-frameworks', 'Lint uses static frameworks during installation'],
             ["--sources=#{Pod::TrunkSource::TRUNK_REPO_URL}", 'The sources from which to pull dependent pods ' \
               "(defaults to #{Pod::TrunkSource::TRUNK_REPO_URL}). Multiple sources must be comma-delimited"],
-            ['--platforms=ios,macos', 'Lint against specific platforms (defaults to all platforms supported by the ' \
+            ['--platforms=ios,macos,visionos', 'Lint against specific platforms (defaults to all platforms supported by the ' \
               'podspec). Multiple platforms must be comma-delimited'],
             ['--private', 'Lint skips checks that apply only to public specs'],
             ['--swift-version=VERSION', 'The `SWIFT_VERSION` that should be used to lint the spec. ' \
@@ -38,6 +38,7 @@ module Pod
             ['--test-specs=test-spec1,test-spec2,etc', 'List of test specs to run'],
             ['--analyze', 'Validate with the Xcode Static Analysis tool'],
             ['--configuration=CONFIGURATION', 'Build using the given configuration (defaults to Release)'],
+            ['--validation-dir', 'The directory to use for validation. If none is specified a temporary directory will be used.'],
           ].concat(super)
         end
 
@@ -63,6 +64,7 @@ module Pod
           @analyze             = argv.flag?('analyze', false)
           @podspecs_paths      = argv.arguments!
           @configuration       = argv.option('configuration', nil)
+          @validation_dir      = argv.option('validation-dir', nil)
           super
         end
 
@@ -93,6 +95,7 @@ module Pod
             validator.include_podspecs = @include_podspecs
             validator.external_podspecs = @external_podspecs
             validator.configuration = @configuration
+            validator.validation_dir = @validation_dir
             validator.validate
 
             unless @clean

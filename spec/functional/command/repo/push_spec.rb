@@ -160,6 +160,15 @@ module Pod
       (@upstream + 'PushTest/1.4/PushTest.podspec').read.should.include('PushTest')
     end
 
+    it 'successfully pushes spec without validating it when flag no-lint' do
+      cmd = command('repo', 'push', 'master', '--no-lint')
+      Dir.chdir(@upstream) { `git checkout -b tmp_for_push -q` }
+      cmd.expects(:validate_podspec_files).never
+      Dir.chdir(temporary_directory) { cmd.run }
+      Dir.chdir(@upstream) { `git checkout main -q` }
+      (@upstream + 'PushTest/1.4/PushTest.podspec').read.should.include('PushTest')
+    end
+
     it 'successfully pushes a spec to URL' do
       cmd = command('repo', 'push', @upstream)
       Dir.chdir(@upstream) { `git checkout -b tmp_for_push -q` }
@@ -218,6 +227,7 @@ module Pod
       Validator.any_instance.expects(:podfile_from_spec).with(:osx, nil, true, [], false, nil).twice.returns(stub('Podfile'))
       Validator.any_instance.expects(:podfile_from_spec).with(:watchos, nil, true, [], false, nil).twice.returns(stub('Podfile'))
       Validator.any_instance.expects(:podfile_from_spec).with(:tvos, nil, true, [], false, nil).twice.returns(stub('Podfile'))
+      Validator.any_instance.expects(:podfile_from_spec).with(:visionos, nil, true, [], false, nil).twice.returns(stub('Podfile'))
 
       cmd = command('repo', 'push', 'master')
       # Git push will throw an exception here since this is a local custom git repo. All we care is the validator
@@ -232,6 +242,7 @@ module Pod
       Validator.any_instance.expects(:podfile_from_spec).with(:osx, nil, false, [], false, nil).twice.returns(stub('Podfile'))
       Validator.any_instance.expects(:podfile_from_spec).with(:watchos, nil, false, [], false, nil).twice.returns(stub('Podfile'))
       Validator.any_instance.expects(:podfile_from_spec).with(:tvos, nil, false, [], false, nil).twice.returns(stub('Podfile'))
+      Validator.any_instance.expects(:podfile_from_spec).with(:visionos, nil, false, [], false, nil).twice.returns(stub('Podfile'))
 
       cmd = command('repo', 'push', 'master', '--use-libraries')
       # Git push will throw an exception here since this is a local custom git repo. All we care is the validator
@@ -246,6 +257,7 @@ module Pod
       Validator.any_instance.expects(:podfile_from_spec).with(:osx, nil, false, [], true, nil).twice.returns(stub('Podfile'))
       Validator.any_instance.expects(:podfile_from_spec).with(:watchos, nil, false, [], true, nil).twice.returns(stub('Podfile'))
       Validator.any_instance.expects(:podfile_from_spec).with(:tvos, nil, false, [], true, nil).twice.returns(stub('Podfile'))
+      Validator.any_instance.expects(:podfile_from_spec).with(:visionos, nil, false, [], true, nil).twice.returns(stub('Podfile'))
 
       cmd = command('repo', 'push', 'master', '--use-libraries', '--use-modular-headers')
       # Git push will throw an exception here since this is a local custom git repo. All we care is the validator
